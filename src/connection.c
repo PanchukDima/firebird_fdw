@@ -148,7 +148,7 @@ firebirdGetConnection(const char *dbpath, const char *svr_username, const char *
 			val[i] = "EUJC_0208";
 			break;
 		default:
-			val[i] = GetDatabaseEncodingName();
+			val[i] = "WIN1251";//GetDatabaseEncodingName();
 	}
 
 	elog(DEBUG2, "client_encoding: \"%s\"", val[i]);

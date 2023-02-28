@@ -1710,7 +1710,7 @@ firebirdIterateForeignScan(ForeignScanState *node)
 		}
 		else
 		{
-			values[pg_field_nr] = FQgetvalue(fdw_state->result, fdw_state->row, field_nr);
+			values[pg_field_nr] = pg_any_to_server(FQgetvalue(fdw_state->result, fdw_state->row, field_nr), strlen(FQgetvalue(fdw_state->result, fdw_state->row, field_nr)), PG_WIN1251);
 			elog(DEBUG2, " retrieved value (%i): %s", pg_field_nr, values[pg_field_nr]);
 		}
 
