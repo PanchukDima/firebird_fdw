@@ -48,7 +48,7 @@ static bool xact_got_connection = false;
 
 
 static char *firebirdDbPath(char **address, char **database, int *port);
-static FBconn *firebirdGetConnection(const char *dbpath, const char *svr_username, const char *svr_password);
+static FBconn *firebirdGetConnection(const char *dbpath, const char *svr_username, const char *svr_password, const char *svr_coding);
 static void fb_begin_remote_xact(ConnCacheEntry *entry);
 static void fb_xact_callback(XactEvent event, void *arg);
 static void fb_subxact_callback(SubXactEvent event,
@@ -62,7 +62,7 @@ static void fb_subxact_callback(SubXactEvent event,
  * Establish DB connection
  */
 static FBconn *
-firebirdGetConnection(const char *dbpath, const char *svr_username, const char *svr_password)
+firebirdGetConnection(const char *dbpath, const char *svr_username, const char *svr_password, const char *svr_coding)
 {
 	FBconn *volatile conn;
 	const char *kw[5];
@@ -117,39 +117,44 @@ firebirdGetConnection(const char *dbpath, const char *svr_username, const char *
 	 *  - https://www.postgresql.org/docs/current/multibyte.html#MULTIBYTE-CHARSET-SUPPORTED
 	 *  - https://github.com/FirebirdSQL/firebird/blob/master/src/jrd/IntlManager.cpp#L100
 	 */
-
-	kw[i] = "client_encoding";
-
-	switch (GetDatabaseEncoding())
-	{
-		case PG_SQL_ASCII:
-			val[i] = "NONE";
-			break;
-		case PG_ISO_8859_5:
-			val[i] = "ISO8859_5";
-			break;
-		case PG_ISO_8859_6:
-			val[i] = "ISO8859_6";
-			break;
-		case PG_ISO_8859_7:
-			val[i] = "ISO8859_7";
-			break;
-		case PG_ISO_8859_8:
-			val[i] = "ISO8859_8";
-			break;
-		case PG_WIN866:
-			val[i] = "DOS866";
-			break;
-		case PG_EUC_JP:
-			/*
-			 * NOTE: need to verify whether this EUJC_0208 is an exact match for PostgreSQL's
-			 * EUC_JP (which might include JIS X 0212 and JIS X 0201).
-			 */
-			val[i] = "EUJC_0208";
-			break;
-		default:
-			val[i] = "WIN1251";//GetDatabaseEncodingName();
-	}
+    if (svr_coding != NULL)
+    {
+        kw[i] = "client_encoding";
+        val[i] = svr_coding;
+    }
+    else
+    {
+        switch (GetDatabaseEncoding())
+        {
+            case PG_SQL_ASCII:
+                val[i] = "NONE";
+                break;
+            case PG_ISO_8859_5:
+                val[i] = "ISO8859_5";
+                break;
+            case PG_ISO_8859_6:
+                val[i] = "ISO8859_6";
+                break;
+            case PG_ISO_8859_7:
+                val[i] = "ISO8859_7";
+                break;
+            case PG_ISO_8859_8:
+                val[i] = "ISO8859_8";
+                break;
+            case PG_WIN866:
+                val[i] = "DOS866";
+                break;
+            case PG_EUC_JP:
+                /*
+                 * NOTE: need to verify whether this EUJC_0208 is an exact match for PostgreSQL's
+                 * EUC_JP (which might include JIS X 0212 and JIS X 0201).
+                 */
+                val[i] = "EUJC_0208";
+                break;
+            default:
+                val[i] = "WIN1251";//GetDatabaseEncodingName();
+        }
+    }
 
 	elog(DEBUG2, "client_encoding: \"%s\"", val[i]);
 	i++;
@@ -233,6 +238,7 @@ firebirdInstantiateConnection(ForeignServer *server, UserMapping *user)
 		int	  svr_port	   = FIREBIRD_DEFAULT_PORT;
 		char *svr_username = NULL;
 		char *svr_password = NULL;
+		char *svr_coding = NULL;
 
 		char *dbpath;
 
@@ -248,6 +254,7 @@ firebirdInstantiateConnection(ForeignServer *server, UserMapping *user)
 		server_options.address.opt.strptr = &svr_address;
 		server_options.database.opt.strptr = &svr_database;
 		server_options.port.opt.intptr = &svr_port;
+		server_options.coding_database.opt.strptr  = &svr_coding;
 
 		firebirdGetServerOptions(
 			server,
@@ -268,7 +275,8 @@ firebirdInstantiateConnection(ForeignServer *server, UserMapping *user)
 		entry->conn = firebirdGetConnection(
 			dbpath,
 			svr_username,
-			svr_password
+			svr_password,
+			svr_coding
 		);
 
 		pfree(dbpath);
