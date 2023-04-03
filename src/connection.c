@@ -305,7 +305,8 @@ firebirdInstantiateConnection(ForeignServer *server, UserMapping *user)
 			new_conn = firebirdGetConnection(
 				FQdb_path(entry->conn),
 				FQuname(entry->conn),
-				FQupass(entry->conn));
+				FQupass(entry->conn),
+                FQucoding(entry->conn));
 
 			FQfinish(entry->conn);
 			entry->conn = new_conn;
