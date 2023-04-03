@@ -36,6 +36,7 @@ static struct FirebirdFdwOption valid_options[] =
 	{ "updatable",			 ForeignServerRelationId },
 	{ "quote_identifiers",	 ForeignServerRelationId },
 	{ "implicit_bool_type",	 ForeignServerRelationId },
+	{ "coding_database",	 ForeignServerRelationId },
 #if (PG_VERSION_NUM >= 140000)
 	{ "batch_size",			 ForeignServerRelationId },
 	{ "truncatable",		 ForeignServerRelationId },
@@ -380,6 +381,12 @@ firebirdGetServerOptions(ForeignServer *server,
 		{
 			*options->implicit_bool_type.opt.boolptr = defGetBoolean(def);
 			options->implicit_bool_type.provided = true;
+			continue;
+		}
+		if (options->coding_database.opt.strptr != NULL && strcmp(def->defname, "coding_database") == 0)
+		{
+			*options->coding_database.opt.strptr = defGetString(def);
+			options->coding_database.provided = true;
 			continue;
 		}
 #if (PG_VERSION_NUM >= 140000)

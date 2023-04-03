@@ -109,6 +109,7 @@ typedef struct fbServerOptions {
 	fdwOption updatable;
 	fdwOption quote_identifiers;
 	fdwOption implicit_bool_type;
+	fdwOption coding_database;
 #if (PG_VERSION_NUM >= 140000)
 	fdwOption batch_size;
 	fdwOption truncatable;
@@ -125,10 +126,12 @@ typedef struct fbServerOptions {
 	{ { NULL }, false }, \
 	{ { NULL }, false }, \
 	{ { NULL }, false }, \
+	{ { NULL }, false }, \
 	{ { NULL }, false } \
 }
 #else
 #define fbServerOptions_init { \
+	{ { NULL }, false }, \
 	{ { NULL }, false }, \
 	{ { NULL }, false }, \
 	{ { NULL }, false }, \
