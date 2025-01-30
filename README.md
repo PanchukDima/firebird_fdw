@@ -161,6 +161,8 @@ Usage
   operation. This setting can be overridden for individual tables.
 
   `firebird_fdw` 1.3.0 and later / PostgreSQL 14 and later.
+- **client_encoding**
+  set coding database
 
 ## CREATE USER MAPPING options
 
